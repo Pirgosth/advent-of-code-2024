@@ -29,7 +29,7 @@ def is_level_safe(level: list[int], dampener: bool = False, deep = False) -> boo
             if not dampener:
                 return False
             elif dampener:
-                return not deep and (is_level_safe(level[:i-1] + level[i:], True, True) or is_level_safe(level[:i] + level[i+1:], True, True) or (is_level_safe(level[:i+1] + level[i+2:], True, True)))
+                return not deep and (is_level_safe(level[:i-1] + level[i:], True, True) or is_level_safe(level[:i] + level[i+1:], True, True) or is_level_safe(level[:i+1] + level[i+2:], True, True))
     
     return True
 
@@ -37,9 +37,7 @@ def compute_levels_score(levels: list[list[int]], dampener = False) -> int:
     score = 0
 
     for level in levels:
-        safe = is_level_safe(level, dampener=dampener)
-        print(safe, level)
-        if safe:
+        if is_level_safe(level, dampener=dampener):
             score += 1
 
     return score
