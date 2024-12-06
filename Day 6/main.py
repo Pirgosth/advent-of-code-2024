@@ -1,25 +1,31 @@
+
 from copy import deepcopy
 
-def find_start_pos(map: list[str]):
-    for j in range(len(map)):
-        for i in range(len(map[j])):
-            if map[j][i] == "^":
+
+def find_start_pos(map: list[str], size: tuple[int, int]):
+    w, h = size
+    for j in range(h):
+        for i in range(w):
+            if map[j * w + i] == "^":
                 return (i, j)
             
     return (-1, -1)
 
-def look_for_guard_path(map: list[str]):
-    pos = find_start_pos(map)
-    known_pos = [["." for _ in range(len(map[0]))] for _ in range(len(map))]
+def look_for_guard_path(map: list[str], size: tuple[int, int]):
+    pos = find_start_pos(map, size)
+
+    w, h = size
+
+    known_pos = ["."] * (w * h)
     direction = (0, -1)
 
-    while pos[0] >= 0 and pos[0] < len(map[0]) and pos[1] >= 0 and pos[1] < len(map):
+    while pos[0] >= 0 and pos[0] < w and pos[1] >= 0 and pos[1] < h:
         i, j = pos
-        known_pos[j][i] = "X"
+        known_pos[j * w + i] = "X"
         i += direction[0]
         j += direction[1]
-        if i >= 0 and i < len(map[0]) and j >= 0 and j < len(map):
-            destination = map[j][i]
+        if i >= 0 and i < w and j >= 0 and j < h:
+            destination = map[j * w + i]
             if destination == "#":
                 direction = rotate(direction)
                 continue
@@ -38,39 +44,35 @@ def rotate(direction):
     if direction == (-1, -0):
         return (0, -1)
     
-def count_known_positions(known_positions: list[list[str]]):
+def count_known_positions(known_positions: list[str]):
     result = 0
 
-    for line in known_positions:
-        for pos in line:
-            if pos == "X":
-                result += 1
+    for pos in known_positions:
+        if pos == "X":
+            result += 1
         
     return result
 
-def is_path_a_loop(map: list[str]):
-    start_pos = find_start_pos(map)
+def is_path_a_loop(start_pos: tuple[str, str], map: list[str], size: tuple[int, int]):
     pos = start_pos
-    known_pos = [[(".", None) for _ in range(len(map[0]))] for _ in range(len(map))]
+
+    w, h = size
     direction = (0, -1)
 
-    path = []
-    w, h = len(map[0]), len(map)
+    path = {}
 
     while pos[0] >= 0 and pos[0] < w and pos[1] >= 0 and pos[1] < h:
         i, j = pos
 
         if (pos, direction) not in path:
-            path.append((pos, direction))
+            path[(pos, direction)] = True
         else:
             return True
 
-        known_pos[j][i] = ("X", direction)
         i += direction[0]
         j += direction[1]
         if i >= 0 and i < w and j >= 0 and j < h:
-            destination = map[j][i]
-            if destination == "#":
+            if map[j * w + i] == "#":
                 direction = rotate(direction)
                 continue
         
@@ -78,40 +80,47 @@ def is_path_a_loop(map: list[str]):
 
     return False
 
-def compute_path_obfuscations(map: list[str]):
-    known_pos = look_for_guard_path(map)
+def compute_path_obfuscations(map: list[str], size: tuple[int, int]):
+    known_pos = look_for_guard_path(map, size)
+    w, h = size
 
     result = 0
+    start_pos = find_start_pos(map, size)
 
-    for j in range(len(map)):
-        for i in range(len(map[0])):
-            if known_pos[j][i] != "X":
+    for j in range(h):
+        for i in range(w):
+            if known_pos[j * w + i] != "X":
                 continue
 
-            test_map = deepcopy(map)
-            test_map[j] = test_map[j][:i] + ["#"] + test_map[j][i+1:]
+            map[j * w + i] = "#"
 
-            if is_path_a_loop(test_map):
+            if is_path_a_loop(start_pos, map, size):
                 print("Testing pair:", i, j, "Loop = True")
                 result += 1
             else:
                 print("Testing pair:", i, j, "Loop = False")
+
+            map[j * w + i] = "."
+
         
     return result
 
 def main():
     with open("input.txt", "r", encoding="utf-8") as input:
         map = []
+        w, h = 0, 0
         for line in input:
-            map.append(list(line[:-1]))
+            w = len(line) - 1
+            h += 1
+            for c in line[:-1]:
+                map.append(c)
 
-    known_pos = look_for_guard_path(map)
+    known_pos = look_for_guard_path(map, (w, h))
     result = count_known_positions(known_pos)
 
+    result_2 = compute_path_obfuscations(map, (w, h))
+
     print("[Part1] Result is:", result)
-
-    result_2 = compute_path_obfuscations(map)
-
     print("[Part2] Result is:", result_2)
 
 
