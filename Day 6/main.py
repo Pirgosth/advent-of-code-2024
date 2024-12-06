@@ -112,7 +112,7 @@ def main():
 
     result_2 = compute_path_obfuscations(map)
 
-    print("[Part1] Result is:", result_2)
+    print("[Part2] Result is:", result_2)
 
 
 main()
